@@ -49,7 +49,18 @@ internal static class Program
 
                 Debug.Print($"InLoop");
 
-                var handle = FindWindow("UnityWndClass", "崩坏：星穹铁道"); // "Honkai: Star Rail"
+                var handleZh = FindWindow("UnityWndClass", "崩坏：星穹铁道"); // "Honkai: Star Rail"
+                var handleEn = FindWindow("UnityWndClass", "Honkai: Star Rail");
+                var handle = IntPtr.Zero;
+
+                if (handleZh == IntPtr.Zero)
+                {
+                    handle = handleEn;
+                } else if (handleEn == IntPtr.Zero)
+                {
+                    handle = handleZh;
+                }
+                
                 if (handle == IntPtr.Zero)
                 {
                     Debug.Print($"Not found game process.");
