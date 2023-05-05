@@ -49,7 +49,14 @@ internal static class Program
 
                 Debug.Print($"InLoop");
 
-                var handle = FindWindow("UnityWndClass", "崩坏：星穹铁道"); // "Honkai: Star Rail"
+                var isGlobal = false;
+                var handle = FindWindow("UnityWndClass", "崩坏：星穹铁道");
+                if (handle == IntPtr.Zero)
+                {
+                    handle = FindWindow("UnityWndClass", "Honkai: Star Rail");
+                    isGlobal = true;
+                }
+
                 if (handle == IntPtr.Zero)
                 {
                     Debug.Print($"Not found game process.");
@@ -69,7 +76,7 @@ internal static class Program
                 {
                     var process = Process.GetProcesses().First(x => x.MainWindowHandle == handle);
 
-                    var isGlobal = CheckGlobal(process);
+                    // var isGlobal = CheckGlobal(process);
 
                     Debug.Print($"Check process with {handle} | {process.ProcessName}");
 
