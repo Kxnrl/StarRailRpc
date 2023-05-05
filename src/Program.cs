@@ -1,11 +1,8 @@
 ﻿using DiscordRPC;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Management;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -49,12 +46,13 @@ internal static class Program
 
                 Debug.Print($"InLoop");
 
-                var isGlobal = false;
+                var miHoyo = true;
                 var handle = FindWindow("UnityWndClass", "崩坏：星穹铁道");
                 if (handle == IntPtr.Zero)
                 {
+                    // hoyoverse
+                    miHoyo = false;
                     handle = FindWindow("UnityWndClass", "Honkai: Star Rail");
-                    isGlobal = true;
                 }
 
                 if (handle == IntPtr.Zero)
@@ -76,11 +74,9 @@ internal static class Program
                 {
                     var process = Process.GetProcesses().First(x => x.MainWindowHandle == handle);
 
-                    // var isGlobal = CheckGlobal(process);
-
                     Debug.Print($"Check process with {handle} | {process.ProcessName}");
 
-                    if (!isGlobal)
+                    if (miHoyo)
                     {
                         if (!playing)
                         {
@@ -144,13 +140,13 @@ internal static class Program
             Visible = true,
         };
 
-        exitButton.Click += (sender, args) =>
+        exitButton.Click += (_, _) =>
         {
             notifyIcon.Visible = false;
             Thread.Sleep(100);
             Environment.Exit(0);
         };
-        autoButton.Click += (sender, args) =>
+        autoButton.Click += (_, _) =>
         {
             if (AutoStart.Check())
             {
@@ -179,65 +175,6 @@ internal static class Program
             Timestamps = Timestamps.Now,
         });
 
-    private static bool CheckGlobal(Process process)
-    {
-        var path = GetPathOfWindow(process);
-        var file = Path.Combine(Path.GetDirectoryName(path)!, "config.ini");
-
-        if (!File.Exists(file))
-            throw new FileNotFoundException("Config not found");
-
-        var value = GetIniSectionValue(file, "General", "cps", "gw_PC");
-
-        return value is not ("gw_PC" or "bilibili_PC");
-    }
-
-    private static string GetIniSectionValue(string file, string section, string key, string defaultVal = null)
-    {
-        var stringBuilder = new StringBuilder(1024);
-        GetPrivateProfileString(section, key, defaultVal, stringBuilder, 1024, file);
-        return stringBuilder.ToString();
-    }
-
-    [DllImport("kernel32.dll")]
-    private static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retval, int size, string filePath);
-
     [DllImport("user32.dll")]
     private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-
-    private static string GetPathOfWindow(Process process)
-    {
-        try
-        {
-            return process.MainModule!.FileName;
-        }
-        catch (Exception e)
-        {
-            Debug.Print(e.ToString());
-        }
-
-        try
-        {
-            using var searcher = new ManagementObjectSearcher("SELECT ProcessId, ExecutablePath, CommandLine FROM Win32_Process");
-            using var collection = searcher.Get();
-            var results = collection.Cast<ManagementObject>();
-
-            foreach (var item in results)
-            {
-                var id = (int)(uint)item["ProcessId"];
-                var path = (string)item["ExecutablePath"];
-
-                if (id == process.Id)
-                {
-                    return path;
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.Print(e.ToString());
-        }
-
-        throw new InvalidOperationException("Failed to get path of handle");
-    }
 }
